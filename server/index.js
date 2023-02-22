@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./connect');
 const { Configuration, OpenAIApi } = require('openai');
 const Post = require('./models/post');
+const cloudinary = require('cloudinary').v2;
 
 dotenv.config();
 connectDB(process.env.MONGODB_URL);
@@ -12,6 +13,13 @@ connectDB(process.env.MONGODB_URL);
 const configuration = new Configuration({
     apiKey: process.env.OPEN_AI_KEY,
 });
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET
+});
+
   
 const openai = new OpenAIApi(configuration);
   
@@ -48,10 +56,11 @@ app.post('/api/create',async (req,res) => {
 app.post('/api/upload',async (req,res) => {
     try {
         const { name, prompt, photo } = req.body;
+        const { url }= await cloudinary.uploader.upload(photo)
         const newPost = await Post.create({
           name,
           prompt,
-          photo,
+          photo:url,
         });
         res.status(200).json({ success: true, data: newPost });
     } catch (err) {
